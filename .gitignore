@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.DS_Store
+preparation/txt_files/voc
 
 # C extensions
 *.so
