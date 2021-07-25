@@ -14,6 +14,7 @@ anchors:
   - [38,46, 61,109, 151,93]  # P3/8
   - [98,197, 210,180, 155,296]  # P4/16
   - [390,181, 268,335, 442,342]  # P5/32
+  
 # YOLOv5 backbone
 backbone:
   # [from, number, module, args]
