@@ -22,6 +22,8 @@ class Detect(Layer):
         out 1 (None, 40, 40, 512)
         out 2 (None, 20, 20, 1024)
         '''
+
+
         for i in range(self.num_scale):  # number of scale layer, default=3
             y = self.modules[i](x[i])
             _, grid1, grid2, _ = y.shape
@@ -34,6 +36,7 @@ class Detect(Layer):
 
             y_norm = tf.sigmoid(y)  # sigmoid for all dims
             xy, wh, conf, classes = tf.split(y_norm, (2, 2, 1, self.num_classes), axis=-1)
+
 
             pred_xy = (xy * 2. - 0.5 + grid_xy) * self.stride[i]  # decode pred to xywh
             pred_wh = (wh * 2) ** 2 * self.anchors[i] * self.stride[i]

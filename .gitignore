@@ -8,6 +8,8 @@ preparation/txt_files/voc
 yolo-l-mish.h5
 logs
 model_save
+.idea
+txt_files
 
 
 # C extensions

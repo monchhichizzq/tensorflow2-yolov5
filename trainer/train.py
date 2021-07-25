@@ -39,7 +39,7 @@ params = {# dataset
 
           'label_smoothing': 0.02,
 
-          'batch_size': 4,
+          'batch_size': 2,
 
           'class_path': '../preparation/voc_names.txt',
           'yaml_dir': '../models/configs/yolo-l-mish.yaml',
@@ -68,6 +68,12 @@ def train_step(model, loss_fn, image, target):
 
 
 if __name__ == '__main__':
+    # from tensorflow.keras.mixed_precision import experimental as mixed_precision
+    # policy = mixed_precision.Policy('mixed_float16')
+    # mixed_precision.set_policy(policy)
+    # print('Compute dtype: %s' % policy.compute_dtype)
+    # print('Variable dtype: %s' % policy.variable_dtype)
+
     with open(params['yaml_dir']) as f:
         yaml_dict = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -162,7 +168,7 @@ if __name__ == '__main__':
 
         if epoch == 1 or ep_mean_loss <= min_loss:
             min_loss = ep_mean_loss
-            ckpt_save_path=os.path.join(log_dir, 'ep_{}-loss_{}.h5'.format(epoch, ep_mean_loss))
-            model.save(ckpt_save_path)
+            ckpt_save_path=os.path.join(log_dir, 'ep_{}-loss_{}'.format(epoch, ep_mean_loss))
+            model.save_weights(ckpt_save_path)
             print('Saving checkpoint for epoch {} at {}'.format(epoch, ckpt_save_path))
 

@@ -30,9 +30,10 @@ def CBM(x, filters, kernel_size, strides, groups, use_bias, add_bn, add_mish, bl
     bn_name = 'CBM_Conv_{}_bn'.format(block_id)
     act_name = 'CBM_Conv_{}_mish'.format(block_id)
     
-    x = Conv2D(filters, kernel_size, strides, 'SAME', groups=groups, use_bias=use_bias,
+    x = Conv2D(filters, kernel_size, strides, 'SAME', #groups=groups,
+                use_bias=use_bias,
                            kernel_initializer=tf.random_normal_initializer(stddev=0.01),
-                           kernel_regularizer=tf.keras.regularizers.L2(5e-4),
+                           kernel_regularizer=tf.keras.regularizers.l2(5e-4),
                            name = conv_name)(x)
 
     if add_bn:
