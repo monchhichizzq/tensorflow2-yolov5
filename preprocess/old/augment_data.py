@@ -11,30 +11,48 @@ import random
 import numpy as np
 from .image_utils import resize_image
 random.seed(1919)
+from callbacks.plot_utils import draw_box, get_class
 
+is_plot =False
+class_names, _ = get_class(path='../preparation/voc_names.txt')
 
+# mosaic 背景为128
 def load_mosaic_image(index, mosaic_border, image_target_size, images_dir, labels):
+    '''
+    index: int, data index
+    mosaic_border: [-self.img_size // 2, -self.img_size // 2]
+    image_target_size: int, target image size (640)
+    images_dir: list, list of image path
+    labels: list, list of objects (xmin, ymin, xmax, ymax, class) in the image
+    '''
     # labels style: pixel or norm
     # labels output: pixel
     max_index = len(labels) - 1
+    # mosaic 需要4张图片 random select
     indices = [index] + [random.randint(0, max_index) for _ in range(3)]
-    yc, xc = [int(random.uniform(-i, 2 * image_target_size + i)) for i in mosaic_border]  # mosaic center x, y
+    # Get the mosaic center x, y
+    # range from 320 to 960
+    yc, xc = [int(random.uniform(-i, 2 * image_target_size + i)) for i in mosaic_border]  
     label_mosaic = []
 
     for i, index in enumerate(indices):
+        # read image
         img_dir = images_dir[index]
         img = cv2.imread(img_dir)
         label = labels[index].copy()
         h_origin, w_origin, _ = img.shape
 
-        # 根据最长边 将图像等长宽比缩放到640
+        # 根据最长边 将图像等长宽比缩放到 640
         img = resize_image(img, target_sizes=image_target_size, keep_ratio=False)
         h, w, _ = img.shape
 
         if i == 0:  # top left
-            img_mosaic = np.full((image_target_size * 2, image_target_size * 2, 3), 128,
-                                 dtype=np.uint8)  # base image with 4 tiles
-            x1a, y1a, x2a, y2a = max(xc - w, 0), max(yc - h, 0), xc, yc
+            # 生成 image_target_size * 2, image_target_size * 2 大小的矩阵 并且背景设为128
+            img_mosaic = np.full((image_target_size * 2, image_target_size * 2, 3), 
+                                  128, dtype=np.uint8)  # base image with 4 tiles
+            # whole image, left, top, xc, yc
+            x1a, y1a, x2a, y2a = max(xc - w, 0), max(yc - h, 0), xc, yc 
+            # img
             x1b, y1b, x2b, y2b = w - (x2a - x1a), h - (y2a - y1a), w, h
         elif i == 1:  # top right
             x1a, y1a, x2a, y2a = xc, max(yc - h, 0), min(xc + w, image_target_size * 2), yc
@@ -60,11 +78,20 @@ def load_mosaic_image(index, mosaic_border, image_target_size, images_dir, label
                 label_new[:, [1, 3]] = label_new[:, [1, 3]] * h + padh
         label_mosaic.append(label_new)
 
-    if len(label_mosaic):        
+    if len(label_mosaic): 
+        # list of 4 different size arrays (4, )->  remove array (15, 5)
         label_mosaic = np.concatenate(label_mosaic, 0)
         label_mosaic[:, :4] = np.clip(label_mosaic[:, :4], 0, 2 * image_target_size)
 
+    if is_plot:
+        img_mosaic_copy = img_mosaic.copy()
+        mosaiced_img = draw_box(img_mosaic_copy, label_mosaic, class_names, classes_map=None)
+        cv2.imwrite('mosaiced_img.png', mosaiced_img)
+
     img_mosaic, label_mosaic = random_perspective(img_mosaic, label=label_mosaic, border=mosaic_border)
+    if is_plot:
+        mosaiced_img = draw_box(img_mosaic, label_mosaic, class_names, classes_map=None)
+        cv2.imwrite('mosaiced_img_random_perspective.png', mosaiced_img)
     return img_mosaic, label_mosaic
 
 
