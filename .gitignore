@@ -1,9 +1,14 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+__pycache__
 *.py[cod]
 *$py.class
 .DS_Store
 preparation/txt_files/voc
+yolo-l-mish.h5
+logs
+model_save
+
 
 # C extensions
 *.so

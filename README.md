@@ -14,7 +14,12 @@ $ bash preparation/get_voc.sh
 ```
 ### Generate txt file 
 ```
-$ cd preprocess
+$ cd preparation
 $ python prepare_data.py --class_name_dir '../preparation/voc.names' --output_dir '../preparation/txt_files/voc'
 ```
 
+### Generate yolo anchors
+```
+$ cd preparation
+$ python create_anchor.py 
+```

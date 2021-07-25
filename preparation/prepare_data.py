@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 '''
 @auther    : zzhu
-@contact   : zzhu@graimatterlabs.ai
 @time      : 21/7/21 6:14 PM
 @fileName  : prepare_data.py
 '''
@@ -165,8 +164,8 @@ if __name__ == '__main__':
     print('base directory: ', base_dir)
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', type=str, default=base_dir + '/data/voc', help='data directory')
-    parser.add_argument('--class_name_dir', type=str, default='../preparation/voc.names', help='class name dir')
-    parser.add_argument('--output_dir', type=str, default='../preparation/txt_files/voc', help='output text directory')
+    parser.add_argument('--class_name_dir', type=str, default='voc.names', help='class name dir')
+    parser.add_argument('--output_dir', type=str, default='txt_files/voc', help='output text directory')
     opt = parser.parse_args()
 
     shutil.rmtree(opt.output_dir)
