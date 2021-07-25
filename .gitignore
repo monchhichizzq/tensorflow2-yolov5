@@ -9,7 +9,7 @@ yolo-l-mish.h5
 logs
 model_save
 .idea
-txt_files
+preparation/txt_files/voc_old
 
 
 # C extensions
