@@ -8,6 +8,7 @@ import yaml
 import time
 import shutil
 import numpy as np
+from tqdm import tqdm
 import tensorflow as tf
 from preprocess.old.read_data import DataReader, transforms
 from preprocess.old.load_data import DataLoader
@@ -38,7 +39,7 @@ params = {# dataset
 
           'label_smoothing': 0.02,
 
-          'batch_size': 1,
+          'batch_size': 4,
 
           'class_path': '../preparation/voc_names.txt',
           'yaml_dir': '../models/configs/yolo-l-mish.yaml',
@@ -137,21 +138,31 @@ if __name__ == '__main__':
     log_writer = tf.summary.create_file_writer(params['tf_log_dir'])
 
     # train
+    loss_history = []
     min_loss = 0
     for epoch in range(1, params['n_epochs'] + 1):
-        for step, (image, target) in enumerate(train_dataset):                
+        epoch_losses = []
+        for step, (image, target) in enumerate(tqdm(train_dataset)):          
             loss = dist_train_step(model, loss_fn, image, target)
             np_loss = loss.numpy()
-            print('=> Epoch {}, Step {}, Loss {:.5f}'.format(epoch, step, loss.numpy()))
+            # print('=> Epoch {}, Step {}, Loss {:.5f}'.format(epoch, step, loss.numpy()))
             with log_writer.as_default():
                 tf.summary.scalar('loss', loss, step=step)
                 tf.summary.scalar('lr', optimizer.lr, step=step)
             log_writer.flush()
+            
+            epoch_losses.append(np_loss)
+        
+        ep_mean_loss = np.mean(epoch_losses) 
+        # save history
+        history = 'train_history.npy'
+        loss_history.append([epoch, ep_mean_loss])
+        np.save(history, loss_history)
+        print('=> Epoch {}, Loss {:.5f}'.format(epoch, ep_mean_loss))
 
-        if epoch == 0 or np_loss <= min_loss:
-            min_loss = np_loss
-            ckpt_save_path=os.path.join(log_dir, 'ep_{}-loss_{}.h5'.format(epoch, np_loss))
+        if epoch == 1 or ep_mean_loss <= min_loss:
+            min_loss = ep_mean_loss
+            ckpt_save_path=os.path.join(log_dir, 'ep_{}-loss_{}.h5'.format(epoch, ep_mean_loss))
             model.save(ckpt_save_path)
             print('Saving checkpoint for epoch {} at {}'.format(epoch, ckpt_save_path))
-
 

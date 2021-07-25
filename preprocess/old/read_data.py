@@ -111,3 +111,16 @@ def transforms(img, label, mosaic, augment):
         label[:, [0, 2]] = label[:, [0, 2]] / img.shape[1]
         label[:, [1, 3]] = label[:, [1, 3]] / img.shape[0]
     return img, label
+
+
+class TestDataReader(DataReader):
+    def __init__(self, annotations_dir, image_target_size=640, transform=None, mosaic=False, augment=False):
+        super(TestDataReader, self).__init__(annotations_dir, image_target_size, transform, mosaic, augment)
+
+    def __getitem__(self, idx):
+        img, label = self.load_image_and_label(idx)
+        image_original_shape = img.shape[:2]
+        img = resize_image(img, self.image_target_size, keep_ratio=True)
+        img = img / 255.
+        img_id = self.images_dir[idx].split('/')[-1].split('.')[0]
+        return img_id, image_original_shape, img, label  # label is still original

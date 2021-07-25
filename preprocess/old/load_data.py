@@ -41,3 +41,12 @@ class DataLoader(object):
         label_encoder = self.anchor_label.encode(label)
         return image, label_encoder
 
+class TestDataLoader(object):
+    def __init__(self, data_reader):
+        self.data_reader = data_reader
+
+    def __call__(self, batch_size):
+        dataset = tf.data.Dataset.from_generator(self.data_reader.iter,
+                                                 output_types=(tf.string, tf.float32, tf.float32, tf.float32))
+        dataset = dataset.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+        return dataset
