@@ -168,7 +168,8 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', type=str, default='txt_files/voc', help='output text directory')
     opt = parser.parse_args()
 
-    shutil.rmtree(opt.output_dir)
+    if os.path.exists(opt.output_dir):
+        shutil.rmtree(opt.output_dir)
     os.makedirs(opt.output_dir, exist_ok=True)
     print('data directory: {}'.format(opt.data_dir))
     print('class name directory: {}'.format(opt.class_name_dir))

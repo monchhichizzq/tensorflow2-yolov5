@@ -34,7 +34,7 @@ number = max(round(number * depth_multiple), 1) if number > 1 else number
 '''
 
 
-class YoloL(object):
+class Yolo(object):
     def __init__(self, use_bias, add_bn, add_mish, yaml_dir):
         self.use_bias = use_bias
         self.add_bn = add_bn

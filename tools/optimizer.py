@@ -78,7 +78,9 @@ class Cosine(tf.keras.optimizers.schedules.LearningRateSchedule):
         assert warmup_steps < self.total_steps, "warmup {}, total {}".format(warmup_steps, self.total_steps)
 
         linear_warmup = warmup_lr + tf.cast(global_step, tf.float32) / warmup_steps * (init_lr - warmup_lr)
+        # tf.print('linear_warmup: ', linear_warmup, global_step, warmup_steps)
         cosine_learning_rate = init_lr * (
                     tf.cos(np.pi * (global_step - warmup_steps) / (self.total_steps - warmup_steps)) + 1.0) / 2.0
         learning_rate = tf.where(global_step < warmup_steps, linear_warmup, cosine_learning_rate)
+        # tf.print('learning rate: ', learning_rate)
         return learning_rate

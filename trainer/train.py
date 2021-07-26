@@ -12,7 +12,7 @@ from tqdm import tqdm
 import tensorflow as tf
 from preprocess.old.read_data import DataReader, transforms
 from preprocess.old.load_data import DataLoader
-from models.yolo_l_mish import YoloL
+from models.yolo_s_mish import Yolo
 from tools.optimizer import Optimizer, LrScheduler
 from loss.loss_fn import YoloLoss
 
@@ -32,25 +32,25 @@ params = {# dataset
           'anchor_positive_augment': True,
 
           # lr
-          'n_epochs': 30,
-          'init_learning_rate': 3e-4,
+          'n_epochs': 100,
+          'init_learning_rate': 1e-3,
           'warmup_learning_rate': 1e-6,
-          'warmup_epochs': 2, 
+          'warmup_epochs': 2,
 
           'label_smoothing': 0.02,
 
-          'batch_size': 2,
+          'batch_size': 8,
 
           'class_path': '../preparation/voc_names.txt',
-          'yaml_dir': '../models/configs/yolo-l-mish.yaml',
-          'model_save_dir': '../model_save/yolo_l',
-          'tf_log_dir': '../logs/yolo_l',
+          'yaml_dir': '../models/configs/yolo-s-mish.yaml',
+          'model_save_dir': '../model_save/yolo_s',
+          'tf_log_dir': '../logs/yolo_s',
 }
 
 @tf.function
 def dist_train_step(model, loss_fn, image, target):
-    loss = train_step(model, loss_fn, image, target)
-    return loss
+    loss, iou_loss, conf_loss, prob_loss = train_step(model, loss_fn, image, target)
+    return loss, iou_loss, conf_loss, prob_loss
 
 def train_step(model, loss_fn, image, target):
     with tf.GradientTape() as tape:
@@ -60,11 +60,8 @@ def train_step(model, loss_fn, image, target):
     
     gradients = tape.gradient(total_loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-
-    lr = lr_scheduler.step()
-    optimizer.lr.assign(lr)
     # self.global_step.assign_add(1)    
-    return total_loss
+    return total_loss, iou_loss, conf_loss, prob_loss
 
 
 if __name__ == '__main__':
@@ -113,8 +110,9 @@ if __name__ == '__main__':
     
 
     # build model
-    yolo = YoloL(use_bias=False, add_bn=True, add_mish=True, yaml_dir=params['yaml_dir'])
-    model = yolo(img_size=params['img_size'], name='yolo_l')
+    yolo = Yolo(use_bias=False, add_bn=True, add_mish=True, yaml_dir=params['yaml_dir'])
+    model = yolo(img_size=params['img_size'], name='yolo_s')
+    model.summary()
 
     # set loss
     loss_fn = YoloLoss(processed_anchors,
@@ -149,26 +147,29 @@ if __name__ == '__main__':
     for epoch in range(1, params['n_epochs'] + 1):
         epoch_losses = []
         for step, (image, target) in enumerate(tqdm(train_dataset)):          
-            loss = dist_train_step(model, loss_fn, image, target)
+            loss, iou_loss, conf_loss, prob_loss = dist_train_step(model, loss_fn, image, target)
+            lr = lr_scheduler.step()
+            optimizer.lr.assign(lr)
             np_loss = loss.numpy()
-            # print('=> Epoch {}, Step {}, Loss {:.5f}'.format(epoch, step, loss.numpy()))
-            with log_writer.as_default():
-                tf.summary.scalar('loss', loss, step=step)
-                tf.summary.scalar('lr', optimizer.lr, step=step)
-            log_writer.flush()
-            
-            epoch_losses.append(np_loss)
-        
-        ep_mean_loss = np.mean(epoch_losses) 
+            np_iou_loss = iou_loss.numpy()
+            np_conf_loss = conf_loss.numpy()
+            np_prob_loss = prob_loss.numpy()
+
+            epoch_losses.append([np_loss, np_iou_loss, np_conf_loss, np_prob_loss])
+
+        current_lr = optimizer.lr.numpy()
+        ep_mean_loss = np.mean(epoch_losses, axis=0)
         # save history
         history = 'train_history.npy'
-        loss_history.append([epoch, ep_mean_loss])
+        loss_history.append([epoch, current_lr]+list(ep_mean_loss))
         np.save(history, loss_history)
-        print('=> Epoch {}, Loss {:.5f}'.format(epoch, ep_mean_loss))
+        print('lr: ', current_lr)
+        print('loss history: ', np.shape(loss_history))
+        print('=> Epoch {}, Loss {:.5f}, IoU Loss {:.5f}, Conf Loss {:.5f}, Prob Loss {:.5f}'.format(epoch, ep_mean_loss[0], ep_mean_loss[1], ep_mean_loss[2], ep_mean_loss[3]))
 
-        if epoch == 1 or ep_mean_loss <= min_loss:
-            min_loss = ep_mean_loss
-            ckpt_save_path=os.path.join(log_dir, 'ep_{}-loss_{}'.format(epoch, ep_mean_loss))
+        if epoch == 1 or ep_mean_loss[0] <= min_loss:
+            min_loss = ep_mean_loss[0]
+            ckpt_save_path=os.path.join(log_dir, 'ep_{}-loss_{}'.format(epoch, ep_mean_loss[0]))
             model.save_weights(ckpt_save_path)
             print('Saving checkpoint for epoch {} at {}'.format(epoch, ckpt_save_path))
 
