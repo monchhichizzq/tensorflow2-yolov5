@@ -10,7 +10,11 @@ logs
 model_save
 .idea
 preparation/txt_files/voc
-
+weights
+data
+voc_test.txt
+voc_train.txt
+README.md
 
 # C extensions
 *.so

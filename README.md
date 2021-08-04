@@ -1,41 +1,80 @@
-# tensorflow2-yolov5
-YoloV5 implemented by TensorFlow2 , with support for training, evaluation and inference.
+# Yolov5
+[![LICENSE](https://img.shields.io/badge/license-Anti%20996-blue.svg)](https://github.com/996icu/996.ICU/blob/master/LICENSE) <br>
 
+YoloV5 implemented by TensorFlow2 , with support for training, evaluation and inference. <br>
 
-## Table of Contents
-* [Data Preparation](#data-preparation)
-* [Data Preprocess](#data-preprocess)
-<!-- * [License](#license) -->
+> **NOT perfect** project currently, but I will continue to improve this, so you might want to watch/star this repo to revisit. Any contribution is highly welcomed<br>
 
-## Data Preparation
+![demo](./data/sample/demo1.png)
 
+<!--
+| Model | Size | AP<sup>val</sup> | AP<sub>50</sub><sup>val</sup> | AP<sub>75</sub><sup>val</sup> |  cfg | weights |
+| :-- | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | 
+| YOLOV5s | 672 | 47.7% |52.6% | 61.4% | [cfg](https://github.com/WongKinYiu/PyTorch_YOLOv4/blob/master/cfg/yolov4.cfg) | [weights](https://drive.google.com/file/d/137U-oLekAu-J-fe0E_seTblVxnU3tlNC/view?usp=sharing) |
+| YOLOV5m | 672 | 47.7% |52.6% | 61.4% | [cfg](https://github.com/WongKinYiu/PyTorch_YOLOv4/blob/master/cfg/yolov4.cfg) | [weights](https://drive.google.com/file/d/137U-oLekAu-J-fe0E_seTblVxnU3tlNC/view?usp=sharing) |
+| YOLOV5l | 672 | 47.7% |52.6% | 61.4% | [cfg](https://github.com/WongKinYiu/PyTorch_YOLOv4/blob/master/cfg/yolov4.cfg) | [weights](https://drive.google.com/file/d/137U-oLekAu-J-fe0E_seTblVxnU3tlNC/view?usp=sharing) |
+| YOLOV5x | 672 | 47.7% |52.6% | 61.4% | [cfg](https://github.com/WongKinYiu/PyTorch_YOLOv4/blob/master/cfg/yolov4.cfg) | [weights](https://drive.google.com/file/d/137U-oLekAu-J-fe0E_seTblVxnU3tlNC/view?usp=sharing) |
+|  |  |  |  |  |  |  |
+-->
+
+## Key Features
+- minimal Yolov5 by pure tensorflow2
+- yaml file to configure the model
+- custom data training
+- mosaic data augmentation
+- label encoding by iou or wh ratio of anchor
+- positive sample augment
+- multi-gpu training
+- detailed code comments
+- full of drawbacks with huge space to improve
+
+## Usage
+### Clone and install requirements
+```
+$ git clone git@github.com:LongxingTan/Yolov5.git
+$ cd Yolov5/
+$ pip install -r requirements.txt
+```
+<!-- ### Download pretrained weights
+```
+$ cd weights/
+$ bash download_weights.sh
+``` -->
 ### Download VOC
 ```
-$ bash preparation/get_voc.sh
-```
-### Generate txt file 
-```
-$ cd preparation
-$ python prepare_data.py --class_name_dir '../preparation/voc.names' --output_dir '../preparation/txt_files/voc'
+$ bash data/scripts/get_voc.sh
+$ cd yolo
+$ python dataset/prepare_data.py
 ```
 
-### Generate yolo anchors
+<!-- ### Download COCO
 ```
-$ cd preparation
-$ python create_anchor.py 
+$ cd data/
+$ bash get_coco_dataset.sh
+``` -->
+### Train
+```
+$ python train.py
 ```
 
-## Data Preprocess
 
-### 1. Load Mosaic Image
+### Inference
+```
+$ python detect.py
+$ python test.py
+```
 
-Examples:
-
-<img src="images/mosaiced_img.png" width="250px">
-<img src="images/mosaiced_img_1.png" width="250px">
-
-### 2. Random perspective
-Examples:
-
-<img src="images/mosaiced_img.png" width="250px">
-<img src="images/mosaiced_img_random_perspective.png" width="250px">
+### Train on custom data
+If you want to train on custom dataset, PLEASE note the input data should like this:
+```
+image_dir/001.jpg x_min, y_min, x_max, y_max, class_id x_min2, y_min2, x_max2, y_max2, class_id2
+```
+And maybe new anchor need to be created, don't forget to change the nc(number classes) in yolo-yaml.
+```
+$ python dataset/create_anchor.py
+```
+## References and Further Reading
+- [yolov5](https://github.com/ultralytics/yolov5)
+- [PyTorch_YOLOv4](https://github.com/WongKinYiu/PyTorch_YOLOv4)
+- [yolov3-tf2](https://github.com/zzh8829/yolov3-tf2)
+- [tensorflow-yolov3](https://github.com/YunYang1994/tensorflow-yolov3)
